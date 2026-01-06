@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rotate PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10 text-center">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Rotate PDF</h1>
+        <p class="text-slate-500 mb-8">Permanently rotate your PDF pages.</p>
+
+        <input type="file" id="fileInput" class="mb-6 mx-auto block" accept=".pdf">
+
+        <div id="rotateControls" class="hidden">
+            <div class="flex justify-center gap-4 mb-8">
+                <button onclick="rotate(90)" class="bg-lime-100 text-lime-700 px-6 py-3 rounded-lg font-bold hover:bg-lime-200">Rotate 90°</button>
+                <button onclick="rotate(180)" class="bg-lime-100 text-lime-700 px-6 py-3 rounded-lg font-bold hover:bg-lime-200">Rotate 180°</button>
+                <button onclick="rotate(270)" class="bg-lime-100 text-lime-700 px-6 py-3 rounded-lg font-bold hover:bg-lime-200">Rotate 270°</button>
+            </div>
+            <p class="text-xs text-slate-400">Click a button to download rotated version</p>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument, degrees } = PDFLib;
+        let pdfBytes = null;
+
+        document.getElementById('fileInput').onchange = async (e) => {
+            pdfBytes = await e.target.files[0].arrayBuffer();
+            document.getElementById('rotateControls').classList.remove('hidden');
+        };
+
+        async function rotate(deg) {
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            const pages = pdfDoc.getPages();
+            pages.forEach(page => {
+                const currentRotation = page.getRotation().angle;
+                page.setRotation(degrees(currentRotation + deg));
+            });
+            const bytes = await pdfDoc.save();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([bytes], {type:'application/pdf'}));
+            link.download = "rotated.pdf";
+            link.click();
+        }
+    </script>
+</body>
+</html>
