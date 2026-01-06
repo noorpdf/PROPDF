@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Protect PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Protect PDF</h1>
+        <p class="text-slate-500 mb-8">Encrypt your PDF with a strong password to keep it secure.</p>
+
+        <div id="dropzone" class="border-2 border-dashed border-red-200 bg-red-50 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-red-400 mb-6">
+            <svg class="w-12 h-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <p class="text-lg font-medium text-slate-700">Select PDF File</p>
+            <input type="file" id="fileInput" class="hidden" accept=".pdf">
+        </div>
+
+        <div id="passwordArea" class="hidden space-y-4">
+            <input type="password" id="passInput" placeholder="Enter Password" class="w-full border-2 border-slate-200 rounded-lg p-3 outline-none focus:border-red-500 transition-all">
+            <button id="protectBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-lg shadow-red-100">Encrypt & Download</button>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument } = PDFLib;
+        const fileInput = document.getElementById('fileInput');
+        let pdfBytes = null;
+
+        document.getElementById('dropzone').onclick = () => fileInput.click();
+
+        fileInput.onchange = async (e) => {
+            pdfBytes = await e.target.files[0].arrayBuffer();
+            document.getElementById('passwordArea').classList.remove('hidden');
+        };
+
+        document.getElementById('protectBtn').onclick = async () => {
+            const password = document.getElementById('passInput').value;
+            if(!password) return alert("Please enter a password");
+
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            // Encryption using userPassword
+            const encryptedBytes = await pdfDoc.save({ 
+                userPassword: password, 
+                ownerPassword: password,
+                permissions: { printing: 'highResolution', modifying: false }
+            });
+
+            const blob = new Blob([encryptedBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "protected_document.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
