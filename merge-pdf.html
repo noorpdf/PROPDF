@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Merge PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Merge PDF</h1>
+        <p class="text-slate-500 mb-8">Combine multiple PDF files into one document in seconds.</p>
+
+        <div id="dropzone" class="border-2 border-dashed border-violet-200 bg-violet-50 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-violet-400">
+            <svg class="w-12 h-12 text-violet-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <p class="text-lg font-medium text-slate-700">Select Multiple PDF Files</p>
+            <input type="file" id="fileInput" class="hidden" accept=".pdf" multiple>
+        </div>
+
+        <div id="fileList" class="mt-6 space-y-2"></div>
+
+        <button id="mergeBtn" class="w-full mt-6 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-lg hidden transition-all">
+            Merge and Download PDF
+        </button>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const mergeBtn = document.getElementById('mergeBtn');
+        let selectedFiles = [];
+
+        document.getElementById('dropzone').onclick = () => fileInput.click();
+
+        fileInput.onchange = (e) => {
+            selectedFiles = Array.from(e.target.files);
+            fileList.innerHTML = selectedFiles.map(f => `<div class="p-3 bg-slate-50 rounded border text-sm text-slate-600">📄 ${f.name}</div>`).join('');
+            if(selectedFiles.length > 1) mergeBtn.classList.remove('hidden');
+        };
+
+        mergeBtn.onclick = async () => {
+            const mergedPdf = await PDFLib.PDFDocument.create();
+            for (const file of selectedFiles) {
+                const pdfBytes = await file.arrayBuffer();
+                const pdf = await PDFLib.PDFDocument.load(pdfBytes);
+                const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                copiedPages.forEach((page) => mergedPdf.addPage(page));
+            }
+            const mergedPdfBytes = await mergedPdf.save();
+            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "merged_document.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
