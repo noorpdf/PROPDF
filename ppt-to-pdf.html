@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT to PDF Converter | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- JSZip for parsing PPTX (which is a zip) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- html2pdf for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-slate-50 font-sans">
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-6">
+        <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">PPT to PDF</h1>
+            <p class="text-slate-500 mb-8">Convert your PowerPoint presentations (.pptx) into portable PDF documents.</p>
+
+            <!-- Dropzone -->
+            <div id="dropzone" class="border-2 border-dashed border-amber-200 bg-amber-50 rounded-xl p-10 flex flex-col items-center justify-center transition-all cursor-pointer hover:border-amber-400">
+                <svg class="w-12 h-12 text-amber-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v10m0 0l3-3m-3 3l-3-3"></path>
+                </svg>
+                <p class="text-lg font-medium text-slate-700">Click to upload or drag and drop</p>
+                <p class="text-sm text-slate-400">PowerPoint files (.pptx) only</p>
+                <input type="file" id="fileInput" class="hidden" accept=".pptx">
+            </div>
+
+            <!-- Status Area -->
+            <div id="statusArea" class="mt-6 hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="fileName" class="text-sm font-semibold text-slate-600 truncate mr-4">presentation.pptx</span>
+                    <span id="percent" class="text-sm text-amber-600 font-bold">Ready</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-amber-500 h-2.5 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+                
+                <p id="loadingMsg" class="text-center text-xs text-slate-400 mt-2">Analyzing slide structure...</p>
+
+                <button id="downloadBtn" class="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg hidden transition-colors shadow-lg shadow-amber-200">
+                    Download PDF Document
+                </button>
+            </div>
+        </div>
+
+        <!-- Hidden container for slide rendering -->
+        <div id="pptContainer" class="hidden" style="width: 900px; background: white;"></div>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const statusArea = document.getElementById('statusArea');
+        const progressBar = document.getElementById('progressBar');
+        const percentText = document.getElementById('percent');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const fileNameLabel = document.getElementById('fileName');
+        const loadingMsg = document.getElementById('loadingMsg');
+        const pptContainer = document.getElementById('pptContainer');
+
+        dropzone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+        // Drag & Drop events
+        dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('border-amber-400'); };
+        dropzone.ondragleave = () => { dropzone.classList.remove('border-amber-400'); };
+        dropzone.ondrop = (e) => {
+            e.preventDefault();
+            handleFile(e.dataTransfer.files[0]);
+        };
+
+        async function handleFile(file) {
+            if (!file || !file.name.endsWith('.pptx')) {
+                alert('Please upload a valid .pptx file.');
+                return;
+            }
+
+            // UI Feedback
+            fileNameLabel.innerText = file.name;
+            statusArea.classList.remove('hidden');
+            downloadBtn.classList.add('hidden');
+            progressBar.style.width = '20%';
+            loadingMsg.innerText = "Extracting slides...";
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const zip = await JSZip.loadAsync(e.target.result);
+                    pptContainer.innerHTML = ''; // Clear old content
+                    
+                    // We look for slide files in the pptx structure
+                    const slideFiles = Object.keys(zip.files).filter(name => name.startsWith('ppt/slides/slide') && name.endsWith('.xml'));
+                    
+                    progressBar.style.width = '50%';
+                    loadingMsg.innerText = `Processing ${slideFiles.length} slides...`;
+
+                    // For each slide, we create a div (Simplified rendering for browser)
+                    for (let i = 1; i <= slideFiles.length; i++) {
+                        const slideXml = await zip.file(`ppt/slides/slide${i}.xml`).async("string");
+                        
+                        // Extract text from the XML
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(slideXml, "text/xml");
+                        const textNodes = xmlDoc.getElementsByTagName("a:t");
+                        let slideText = "";
+                        for (let node of textNodes) {
+                            slideText += node.textContent + " ";
+                        }
+
+                        // Create a visual "Slide" in HTML
+                        const slideDiv = document.createElement('div');
+                        slideDiv.style.height = '600px';
+                        slideDiv.style.padding = '50px';
+                        slideDiv.style.borderBottom = '2px solid #eee';
+                        slideDiv.style.pageBreakAfter = 'always';
+                        slideDiv.innerHTML = `
+                            <div style="color: #999; font-size: 12px; margin-bottom: 20px;">Slide ${i}</div>
+                            <div style="font-size: 24px; color: #333; line-height: 1.6;">${slideText}</div>
+                        `;
+                        pptContainer.appendChild(slideDiv);
+                    }
+
+                    progressBar.style.width = '100%';
+                    percentText.innerText = 'Complete!';
+                    loadingMsg.innerText = "Ready for conversion.";
+                    downloadBtn.classList.remove('hidden');
+
+                    downloadBtn.onclick = () => {
+                        const opt = {
+                            margin: 0,
+                            filename: file.name.replace('.pptx', '.pdf'),
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2 },
+                            jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+                        };
+                        html2pdf().from(pptContainer).set(opt).save();
+                    };
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error parsing PowerPoint file. Please ensure it is a modern .pptx file.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>
