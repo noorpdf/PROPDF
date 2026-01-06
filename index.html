@@ -58,7 +58,6 @@
     </style>
 </head>
 <body>
-
     <div class="blood-mesh"></div>
 
     <!-- NAVBAR -->
@@ -215,29 +214,44 @@
             });
         }
 
-        // 20 TOOLS MASTER LIST
+        // 30 TOOLS MASTER LIST
         const tools = [
-            { title: "Merge PDF", cat: "organize", icon: "fa-object-group", color: "red-800", link: "merge-pdf.html" },
-            { title: "Split PDF", cat: "organize", icon: "fa-cut", color: "red-800", link: "split-pdf.html" },
-            { title: "Compress PDF", cat: "organize", icon: "fa-compress-alt", color: "red-800", link: "compress-pdf.html" },
-            { title: "Reorder PDF", cat: "organize", icon: "fa-sort", color: "red-800", link: "reorder-pdf.html" },
-            { title: "PDF to Word", cat: "convert", icon: "fa-file-word", color: "yellow-600", link: "pdf-to-word.html" },
-            { title: "Word to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "word-to-pdf.html" },
-            { title: "PDF to Excel", cat: "convert", icon: "fa-file-excel", color: "yellow-600", link: "pdf-to-excel.html" },
-            { title: "Excel to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "excel-to-pdf.html" },
-            { title: "PDF to PPT", cat: "convert", icon: "fa-file-powerpoint", color: "yellow-600", link: "pdf-to-ppt.html" },
-            { title: "PPT to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "ppt-to-pdf.html" },
-            { title: "PDF to JPG", cat: "convert", icon: "fa-file-image", color: "yellow-600", link: "pdf-to-jpg.html" },
-            { title: "JPG to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "jpg-to-pdf.html" },
-            { title: "Edit PDF", cat: "edit", icon: "fa-marker", color: "orange-600", link: "edit-pdf.html" },
-            { title: "Rotate PDF", cat: "edit", icon: "fa-sync", color: "orange-600", link: "rotate-pdf.html" },
-            { title: "Watermark", cat: "edit", icon: "fa-stamp", color: "orange-600", link: "watermark-pdf.html" },
-            { title: "Page Numbers", cat: "edit", icon: "fa-list-ol", color: "orange-600", link: "page-numbers.html" },
-            { title: "PDF to Text", cat: "edit", icon: "fa-font", color: "orange-600", link: "pdf-to-text.html" },
-            { title: "Protect PDF", cat: "security", icon: "fa-lock", color: "red-900", link: "protect-pdf.html" },
-            { title: "Unlock PDF", cat: "security", icon: "fa-unlock", color: "red-900", link: "unlock-pdf.html" },
-            { title: "Sign PDF", cat: "security", icon: "fa-signature", color: "red-900", link: "sign-pdf.html" }
-        ];
+    // Existing 20 tools (unchanged)...
+    { title: "Merge PDF", cat: "organize", icon: "fa-object-group", color: "red-800", link: "merge-pdf.html" },
+    { title: "Split PDF", cat: "organize", icon: "fa-cut", color: "red-800", link: "split-pdf.html" },
+    { title: "Compress PDF", cat: "organize", icon: "fa-compress-alt", color: "red-800", link: "compress-pdf.html" },
+    { title: "Reorder PDF", cat: "organize", icon: "fa-sort", color: "red-800", link: "reorder-pdf.html" },
+    
+    { title: "PDF to Word", cat: "convert", icon: "fa-file-word", color: "yellow-600", link: "pdf-to-word.html" },
+    { title: "Word to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "word-to-pdf.html" },
+    { title: "PDF to Excel", cat: "convert", icon: "fa-file-excel", color: "yellow-600", link: "pdf-to-excel.html" },
+    { title: "Excel to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "excel-to-pdf.html" },
+    { title: "PDF to PPT", cat: "convert", icon: "fa-file-powerpoint", color: "yellow-600", link: "pdf-to-ppt.html" },
+    { title: "PPT to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "ppt-to-pdf.html" },
+    { title: "PDF to JPG", cat: "convert", icon: "fa-file-image", color: "yellow-600", link: "pdf-to-jpg.html" },
+    { title: "JPG to PDF", cat: "convert", icon: "fa-file-pdf", color: "yellow-600", link: "jpg-to-pdf.html" },
+    
+    { title: "Edit PDF", cat: "edit", icon: "fa-marker", color: "orange-600", link: "edit-pdf.html" },
+    { title: "Rotate PDF", cat: "edit", icon: "fa-sync", color: "orange-600", link: "rotate-pdf.html" },
+    { title: "Watermark", cat: "edit", icon: "fa-stamp", color: "orange-600", link: "watermark-pdf.html" },
+    { title: "Page Numbers", cat: "edit", icon: "fa-list-ol", color: "orange-600", link: "page-numbers.html" },
+    { title: "PDF to Text", cat: "edit", icon: "fa-font", color: "orange-600", link: "pdf-to-text.html" },
+    
+    { title: "Protect PDF", cat: "security", icon: "fa-lock", color: "red-900", link: "protect-pdf.html" },
+    { title: "Unlock PDF", cat: "security", icon: "fa-unlock", color: "red-900", link: "unlock-pdf.html" },
+    { title: "Sign PDF", cat: "security", icon: "fa-signature", color: "red-900", link: "sign-pdf.html" },
+    
+    { title: "Organize PDF", cat: "organize", icon: "fa-folder-tree", color: "red-800", link: "organize-pdf.html" },
+    { title: "PDF to PDF/A", cat: "convert", icon: "fa-archive", color: "yellow-600", link: "pdf-to-pdfa.html" },
+    { title: "HTML to PDF", cat: "convert", icon: "fa-code", color: "yellow-600", link: "html-to-pdf.html" },
+    { title: "Fill & Sign PDF", cat: "security", icon: "fa-file-signature", color: "red-900", link: "fill-sign-pdf.html" },
+    { title: "Request Signatures", cat: "security", icon: "fa-user-check", color: "red-900", link: "request-signatures.html" },
+    { title: "Annotate PDF", cat: "edit", icon: "fa-highlighter", color: "orange-600", link: "annotate-pdf.html" },
+    { title: "OCR PDF", cat: "edit", icon: "fa-eye", color: "orange-600", link: "ocr-pdf.html" },
+    { title: "Repair PDF", cat: "security", icon: "fa-tools", color: "red-900", link: "repair-pdf.html" },
+    { title: "Compare PDF", cat: "organize", icon: "fa-balance-scale", color: "red-800", link: "compare-pdf.html" },
+    { title: "PDF Scanner", cat: "convert", icon: "fa-qrcode", color: "yellow-600", link: "pdf-scanner.html" }
+];
 
         function renderTools(list) {
             const grid = document.getElementById('toolsGrid');
