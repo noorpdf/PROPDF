@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Split PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Split PDF</h1>
+        <p class="text-slate-500 mb-6">Extract specific pages from your PDF document.</p>
+
+        <input type="file" id="fileInput" class="mb-6 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100" accept=".pdf">
+
+        <div id="splitControls" class="hidden space-y-4">
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">From Page</label>
+                    <input type="number" id="startPage" value="1" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-cyan-500 outline-none">
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">To Page</label>
+                    <input type="number" id="endPage" value="1" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-cyan-500 outline-none">
+                </div>
+            </div>
+            <button id="splitBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg transition-all">Extract and Download</button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const splitControls = document.getElementById('splitControls');
+        let currentPdf = null;
+
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const bytes = await file.arrayBuffer();
+            currentPdf = await PDFLib.PDFDocument.load(bytes);
+            document.getElementById('endPage').value = currentPdf.getPageCount();
+            splitControls.classList.remove('hidden');
+        };
+
+        document.getElementById('splitBtn').onclick = async () => {
+            const start = parseInt(document.getElementById('startPage').value) - 1;
+            const end = parseInt(document.getElementById('endPage').value) - 1;
+            
+            const newPdf = await PDFLib.PDFDocument.create();
+            const indices = Array.from({length: (end - start + 1)}, (_, i) => start + i);
+            const copiedPages = await newPdf.copyPages(currentPdf, indices);
+            copiedPages.forEach(page => newPdf.addPage(page));
+
+            const bytes = await newPdf.save();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([bytes], {type: 'application/pdf'}));
+            link.download = "extracted_pages.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
