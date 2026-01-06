@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Watermark PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Watermark PDF</h1>
+        <p class="text-slate-500 mb-8">Protect your documents with a custom text watermark.</p>
+
+        <input type="file" id="fileInput" class="mb-6 block w-full text-sm text-slate-500 file:bg-pink-50 file:text-pink-700" accept=".pdf">
+
+        <div id="watermarkControls" class="hidden space-y-4">
+            <input type="text" id="wmText" placeholder="Confidential, Draft, etc." class="w-full border rounded-lg p-3 text-xl font-bold uppercase text-center">
+            <button id="applyBtn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg">Apply Watermark</button>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument, rgb, StandardFonts, degrees } = PDFLib;
+        let pdfBytes = null;
+
+        document.getElementById('fileInput').onchange = async (e) => {
+            pdfBytes = await e.target.files[0].arrayBuffer();
+            document.getElementById('watermarkControls').classList.remove('hidden');
+        };
+
+        document.getElementById('applyBtn').onclick = async () => {
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            const watermark = document.getElementById('wmText').value || "WATERMARK";
+            
+            pdfDoc.getPages().forEach(page => {
+                const { width, height } = page.getSize();
+                page.drawText(watermark, {
+                    x: width / 4,
+                    y: height / 4,
+                    size: 80,
+                    font: font,
+                    color: rgb(0.7, 0.7, 0.7), // Light grey
+                    opacity: 0.4,
+                    rotate: degrees(45),
+                });
+            });
+
+            const bytes = await pdfDoc.save();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([bytes]));
+            link.download = "watermarked.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
