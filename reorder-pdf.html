@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reorder PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Reorder PDF</h1>
+        <p class="text-slate-500 mb-8">Drag and drop pages to change their order.</p>
+
+        <input type="file" id="fileInput" accept=".pdf" class="mb-8">
+        
+        <div id="pageContainer" class="grid grid-cols-3 md:grid-cols-5 gap-4"></div>
+
+        <button id="saveBtn" class="w-full mt-10 bg-slate-800 text-white font-bold py-3 rounded-lg hidden">Save New Order</button>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        const pageContainer = document.getElementById('pageContainer');
+        let pdfBytes = null;
+
+        document.getElementById('fileInput').onchange = async (e) => {
+            const file = e.target.files[0];
+            pdfBytes = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(pdfBytes).promise;
+            pageContainer.innerHTML = '';
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 0.3 });
+                const canvas = document.createElement('canvas');
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "p-2 border rounded cursor-move bg-white shadow-sm hover:shadow-md transition-shadow";
+                wrapper.dataset.index = i - 1;
+                wrapper.innerHTML = `<p class="text-center text-xs font-bold mb-1">Page ${i}</p>`;
+                wrapper.appendChild(canvas);
+                pageContainer.appendChild(wrapper);
+            }
+            new Sortable(pageContainer, { animation: 150 });
+            document.getElementById('saveBtn').classList.remove('hidden');
+        };
+
+        document.getElementById('saveBtn').onclick = async () => {
+            const order = Array.from(pageContainer.children).map(el => parseInt(el.dataset.index));
+            const srcDoc = await PDFLib.PDFDocument.load(pdfBytes);
+            const newDoc = await PDFLib.PDFDocument.create();
+            const copiedPages = await newDoc.copyPages(srcDoc, order);
+            copiedPages.forEach(p => newDoc.addPage(p));
+            
+            const bytes = await newDoc.save();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([bytes]));
+            link.download = "reordered.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
