@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Edit PDF</h1>
+        <p class="text-slate-500 mb-8">Add new text or notes to your existing PDF document.</p>
+
+        <input type="file" id="fileInput" class="mb-6 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" accept=".pdf">
+
+        <div id="editControls" class="hidden space-y-4">
+            <textarea id="editText" placeholder="Type text to add..." class="w-full border rounded-lg p-3 h-24 focus:ring-2 focus:ring-teal-500 outline-none"></textarea>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" id="fontSize" value="24" class="border rounded p-2" placeholder="Font Size">
+                <input type="color" id="textColor" value="#000000" class="w-full h-10 border rounded">
+            </div>
+            <button id="saveBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg transition-all">Apply Changes & Download</button>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument, rgb, StandardFonts } = PDFLib;
+        const fileInput = document.getElementById('fileInput');
+        let pdfBytes = null;
+
+        fileInput.onchange = async (e) => {
+            pdfBytes = await e.target.files[0].arrayBuffer();
+            document.getElementById('editControls').classList.remove('hidden');
+        };
+
+        document.getElementById('saveBtn').onclick = async () => {
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const pages = pdfDoc.getPages();
+            const textToAdd = document.getElementById('editText').value;
+            const size = parseInt(document.getElementById('fontSize').value);
+            
+            pages.forEach(page => {
+                page.drawText(textToAdd, {
+                    x: 50,
+                    y: page.getHeight() - 100,
+                    size: size,
+                    font: helveticaFont,
+                    color: rgb(0, 0, 0),
+                });
+            });
+
+            const modifiedBytes = await pdfDoc.save();
+            const blob = new Blob([modifiedBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "edited_document.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
