@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <!-- Library for signature drawing -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Sign PDF</h1>
+        <p class="text-slate-500 mb-8">Draw your signature and place it on your document.</p>
+
+        <input type="file" id="fileInput" class="mb-6 block" accept=".pdf">
+
+        <div id="signArea" class="hidden">
+            <p class="text-sm font-bold text-slate-400 mb-2 uppercase">Draw your signature below:</p>
+            <div class="border-2 border-slate-200 rounded-lg bg-slate-50 mb-4">
+                <canvas id="signature-pad" class="w-full h-48"></canvas>
+            </div>
+            <div class="flex gap-4">
+                <button id="clearBtn" class="flex-1 bg-slate-200 text-slate-600 font-bold py-2 rounded-lg">Clear</button>
+                <button id="applyBtn" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg">Sign & Download</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument } = PDFLib;
+        const canvas = document.getElementById('signature-pad');
+        const signaturePad = new SignaturePad(canvas);
+        let pdfBytes = null;
+
+        // Auto-resize canvas
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            signaturePad.clear();
+        }
+        window.onresize = resizeCanvas;
+
+        document.getElementById('fileInput').onchange = async (e) => {
+            pdfBytes = await e.target.files[0].arrayBuffer();
+            document.getElementById('signArea').classList.remove('hidden');
+            resizeCanvas();
+        };
+
+        document.getElementById('clearBtn').onclick = () => signaturePad.clear();
+
+        document.getElementById('applyBtn').onclick = async () => {
+            if (signaturePad.isEmpty()) return alert("Please provide a signature first.");
+
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            const signatureImg = await pdfDoc.embedPng(signaturePad.toDataURL());
+            
+            const pages = pdfDoc.getPages();
+            const lastPage = pages[pages.length - 1]; // Place signature on last page
+            
+            // Draw signature image at the bottom right
+            lastPage.drawImage(signatureImg, {
+                x: lastPage.getWidth() - 200,
+                y: 50,
+                width: 150,
+                height: 60,
+            });
+
+            const modifiedBytes = await pdfDoc.save();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([modifiedBytes]));
+            link.download = "signed_document.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
