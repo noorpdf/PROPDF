@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel to PDF Converter | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-slate-50 font-sans">
+    <div class="min-h-screen flex flex-col items-center justify-center p-6">
+        <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">Excel to PDF</h1>
+            <p class="text-slate-500 mb-8">Convert your spreadsheets (.xlsx or .xls) into clean PDF reports.</p>
+
+            <div id="dropzone" class="border-2 border-dashed border-emerald-200 bg-emerald-50 rounded-xl p-10 flex flex-col items-center justify-center transition-all cursor-pointer hover:border-emerald-400">
+                <svg class="w-12 h-12 text-emerald-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                <p class="text-lg font-medium text-slate-700">Upload Excel File</p>
+                <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls">
+            </div>
+
+            <div id="statusArea" class="mt-6 hidden">
+                <div class="w-full bg-slate-100 rounded-full h-2.5 mb-4">
+                    <div id="progressBar" class="bg-emerald-600 h-2.5 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+                <button id="downloadBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg">Download PDF</button>
+            </div>
+        </div>
+        <!-- Hidden area to process table -->
+        <div id="excelPreview" class="hidden"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropzone = document.getElementById('dropzone');
+        const statusArea = document.getElementById('statusArea');
+        const excelPreview = document.getElementById('excelPreview');
+
+        dropzone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => handleExcel(e.target.files[0]);
+
+        function handleExcel(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                
+                // Convert to HTML
+                excelPreview.innerHTML = XLSX.utils.sheet_to_html(firstSheet);
+                
+                statusArea.classList.remove('hidden');
+                document.getElementById('progressBar').style.width = '100%';
+
+                document.getElementById('downloadBtn').onclick = () => {
+                    const opt = { margin: 0.5, filename: file.name.replace(/\.[^/.]+$/, "") + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } };
+                    html2pdf().from(excelPreview).set(opt).save();
+                };
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>
