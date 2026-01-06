@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compress PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6 text-center">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Compress PDF</h1>
+        <p class="text-slate-500 mb-8">Reduce file size while maintaining document quality.</p>
+        
+        <input type="file" id="fileInput" class="hidden" accept=".pdf">
+        <button onclick="document.getElementById('fileInput').click()" class="bg-red-50 text-red-600 border-2 border-dashed border-red-200 px-10 py-10 rounded-xl w-full font-bold hover:border-red-400">
+            Upload PDF for Compression
+        </button>
+
+        <div id="status" class="mt-6 text-sm text-slate-500"></div>
+        <canvas id="tempCanvas" class="hidden"></canvas>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        document.getElementById('fileInput').onchange = async (e) => {
+            const file = e.target.files[0];
+            const status = document.getElementById('status');
+            status.innerText = "Compressing... please wait.";
+
+            const reader = new FileReader();
+            reader.onload = async function() {
+                const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+                const { jsPDF } = window.jspdf;
+                const outPdf = new jsPDF();
+                const canvas = document.getElementById('tempCanvas');
+                const ctx = canvas.getContext('2d');
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({ scale: 1.2 }); // Balanced scale
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                    
+                    // Compress by using JPEG at 0.7 quality
+                    const imgData = canvas.toDataURL('image/jpeg', 0.7);
+                    if (i > 1) outPdf.addPage();
+                    outPdf.addImage(imgData, 'JPEG', 0, 0, 210, 297); // A4 size
+                }
+                outPdf.save("compressed.pdf");
+                status.innerText = "Compression complete!";
+            };
+            reader.readAsArrayBuffer(file);
+        };
+    </script>
+</body>
+</html>
