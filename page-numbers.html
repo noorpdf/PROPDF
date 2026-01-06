@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Page Numbers | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10 text-center">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Add Page Numbers</h1>
+        <p class="text-slate-500 mb-8">Numbered pages make your PDF more professional.</p>
+
+        <input type="file" id="fileInput" class="mb-6 mx-auto block" accept=".pdf">
+        
+        <button id="addBtn" class="hidden w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-lg transition-all">
+            Insert Numbers & Download
+        </button>
+    </div>
+
+    <script>
+        const { PDFDocument, rgb, StandardFonts } = PDFLib;
+        let pdfBytes = null;
+
+        document.getElementById('fileInput').onchange = async (e) => {
+            pdfBytes = await e.target.files[0].arrayBuffer();
+            document.getElementById('addBtn').classList.remove('hidden');
+        };
+
+        document.getElementById('addBtn').onclick = async () => {
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const pages = pdfDoc.getPages();
+
+            pages.forEach((page, index) => {
+                const pageNumberText = `Page ${index + 1} of ${pages.length}`;
+                page.drawText(pageNumberText, {
+                    x: page.getWidth() / 2 - 40,
+                    y: 30,
+                    size: 10,
+                    font: font,
+                    color: rgb(0.4, 0.4, 0.4),
+                });
+            });
+
+            const bytes = await pdfDoc.save();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([bytes]));
+            link.download = "numbered_document.pdf";
+            link.click();
+        };
+    </script>
+</body>
+</html>
