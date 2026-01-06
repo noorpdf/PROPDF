@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unlock PDF | ProTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Unlock PDF</h1>
+        <p class="text-slate-500 mb-8">Remove security passwords from your PDF files.</p>
+
+        <input type="file" id="fileInput" class="mb-6 block w-full text-sm text-slate-500 file:bg-green-50 file:text-green-700" accept=".pdf">
+
+        <div id="unlockArea" class="hidden space-y-4">
+            <input type="password" id="passInput" placeholder="Enter current password" class="w-full border rounded-lg p-3 outline-none focus:border-green-500">
+            <button id="unlockBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg">Remove Password Permanently</button>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument } = PDFLib;
+        let pdfBytes = null;
+
+        document.getElementById('fileInput').onchange = async (e) => {
+            pdfBytes = await e.target.files[0].arrayBuffer();
+            document.getElementById('unlockArea').classList.remove('hidden');
+        };
+
+        document.getElementById('unlockBtn').onclick = async () => {
+            const password = document.getElementById('passInput').value;
+            try {
+                // Load with password, then save without encryption
+                const pdfDoc = await PDFDocument.load(pdfBytes, { password });
+                const unlockedBytes = await pdfDoc.save(); 
+
+                const blob = new Blob([unlockedBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = "unlocked_document.pdf";
+                link.click();
+            } catch (err) {
+                alert("Incorrect password. Please try again.");
+            }
+        };
+    </script>
+</body>
+</html>
